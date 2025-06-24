@@ -1,0 +1,33 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Flask app to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/github_ec2
+        chmod 600 ~/.ssh/github_ec2
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy app to EC2
+      run: |
+        scp -i ~/.ssh/github_ec2 -o StrictHostKeyChecking=no app.py requirements.txt ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/flaskapp/
+
+        ssh -i ~/.ssh/github_ec2 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd ~/flaskapp
+          pip3 install -r requirements.txt --user
+          pkill -f "flask run" || true
+          nohup python3 app.py > app.log 2>&1 &
+        EOF
