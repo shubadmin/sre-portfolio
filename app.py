@@ -1,13 +1,17 @@
+@@ -1,10 +1,13 @@
 from flask import Flask
-from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
-metrics = PrometheusMetrics(app)
 
 @app.route("/")
 def home():
-    return "✅ Monitored Flask App"
+    return "Hello, SRE/DevOps World! This is CI/CD Demo on AWS EC2 🚀"
+    return "🚀 Hello from Flask via NGINX!"
 
 @app.route("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok"}, 200
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5000)
+    app.run()
